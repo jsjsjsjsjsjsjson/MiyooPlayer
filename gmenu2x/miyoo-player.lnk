@@ -1,6 +1,6 @@
 title=Miyoo Player
 description=Local video and audio player
-exec=/mnt/App/MiyooPlayer/miyoo-player
+exec=/mnt/apps/MiyooPlayer/miyoo-player
 params=/mnt/videos
 selector=false
 clock=720

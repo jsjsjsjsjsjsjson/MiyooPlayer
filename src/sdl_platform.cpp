@@ -7,10 +7,12 @@ float now_seconds() {
 }
 
 bool platform_init(Platform& p, AudioCallback cb, void* userdata, int audio_rate, int audio_samples) {
+#ifndef MIYOO_NATIVE_TEST
     setenv("SDL_NOMOUSE", "1", 1);
     setenv("SDL_MOUSEDRV", "dummy", 1);
 #ifndef MIYOO_USE_SDL2
     setenv("SDL_VIDEODRIVER", "fbcon", 0);
+#endif
 #endif
 
     if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO | SDL_INIT_TIMER | SDL_INIT_JOYSTICK) < 0) {
@@ -45,7 +47,18 @@ bool platform_init(Platform& p, AudioCallback cb, void* userdata, int audio_rate
     want.userdata = userdata;
 
     SDL_AudioSpec got;
-    if (SDL_OpenAudio(&want, &got) < 0) {
+    bool audio_ready = SDL_OpenAudio(&want, &got) == 0;
+#ifdef MIYOO_NATIVE_TEST
+    if (!audio_ready && std::getenv("SDL_AUDIODRIVER") == nullptr) {
+        std::fprintf(stderr, "SDL_OpenAudio failed: %s; retrying with SDL_AUDIODRIVER=dummy\n", SDL_GetError());
+        setenv("SDL_AUDIODRIVER", "dummy", 1);
+        SDL_QuitSubSystem(SDL_INIT_AUDIO);
+        if (SDL_InitSubSystem(SDL_INIT_AUDIO) == 0) {
+            audio_ready = SDL_OpenAudio(&want, &got) == 0;
+        }
+    }
+#endif
+    if (!audio_ready) {
         std::fprintf(stderr, "SDL_OpenAudio failed: %s\n", SDL_GetError());
         return false;
     }

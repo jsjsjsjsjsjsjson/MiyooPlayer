@@ -6,8 +6,17 @@ set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
-option(MIYOO_USE_SDL2 "Build against SDL2 instead of SDL 1.2" OFF)
+option(MIYOO_NATIVE_TEST "Build a native desktop test binary using the host SDL/FFmpeg libraries" OFF)
+set(MIYOO_USE_SDL2_DEFAULT OFF)
+if(MIYOO_NATIVE_TEST)
+    set(MIYOO_USE_SDL2_DEFAULT ON)
+endif()
+option(MIYOO_USE_SDL2 "Build against SDL2 instead of SDL 1.2" ${MIYOO_USE_SDL2_DEFAULT})
 option(MIYOO_BUILD_KEYTEST "Build SDL key test utility" ON)
+
+if(MIYOO_NATIVE_TEST AND CMAKE_CROSSCOMPILING)
+    message(FATAL_ERROR "MIYOO_NATIVE_TEST is a host/native build; configure it without cmake/miyoo-toolchain.cmake")
+endif()
 
 find_package(PkgConfig REQUIRED)
 
@@ -19,7 +28,6 @@ pkg_check_modules(SWRESAMPLE REQUIRED IMPORTED_TARGET libswresample)
 
 if(MIYOO_USE_SDL2)
     pkg_check_modules(SDL_BACKEND REQUIRED sdl2)
-    add_compile_definitions(MIYOO_USE_SDL2=1)
 else()
     pkg_check_modules(SDL_BACKEND REQUIRED sdl)
 endif()
@@ -31,7 +39,12 @@ foreach(dir IN LISTS SDL_BACKEND_INCLUDE_DIRS)
     endif()
 endforeach()
 
-add_executable(miyoo-player
+set(MIYOO_PLAYER_TARGET miyoo-player)
+if(MIYOO_NATIVE_TEST)
+    set(MIYOO_PLAYER_TARGET miyoo-player-native)
+endif()
+
+set(MIYOO_PLAYER_SOURCES
     src/audio_queue.cpp
     src/file_browser.cpp
     src/ffmpeg_compat.cpp
@@ -46,23 +59,34 @@ add_executable(miyoo-player
     src/video_renderer.cpp
 )
 
-target_include_directories(miyoo-player PRIVATE src)
-target_include_directories(miyoo-player PRIVATE ${SDL_BACKEND_EXISTING_INCLUDE_DIRS})
-target_compile_options(miyoo-player PRIVATE ${SDL_BACKEND_CFLAGS_OTHER})
-target_link_directories(miyoo-player PRIVATE ${SDL_BACKEND_LIBRARY_DIRS})
+function(miyoo_apply_common_options target_name)
+    target_include_directories(${target_name} PRIVATE src ${SDL_BACKEND_EXISTING_INCLUDE_DIRS})
+    target_compile_options(${target_name} PRIVATE
+        ${SDL_BACKEND_CFLAGS_OTHER}
+        -Wall
+        -Wextra
+        -Wpedantic
+        -Wno-deprecated-declarations
+        -Wno-psabi
+        $<$<CONFIG:Release>:-Ofast>
+        $<$<CONFIG:Release>:-fomit-frame-pointer>
+        $<$<CONFIG:Release>:-fno-rtti>
+    )
+    if(MIYOO_USE_SDL2)
+        target_compile_definitions(${target_name} PRIVATE MIYOO_USE_SDL2=1)
+    endif()
+    if(MIYOO_NATIVE_TEST)
+        target_compile_definitions(${target_name} PRIVATE MIYOO_NATIVE_TEST=1)
+    endif()
+    target_link_directories(${target_name} PRIVATE ${SDL_BACKEND_LIBRARY_DIRS})
+    if(SDL_BACKEND_LDFLAGS_OTHER)
+        target_link_options(${target_name} PRIVATE ${SDL_BACKEND_LDFLAGS_OTHER})
+    endif()
+endfunction()
 
-target_compile_options(miyoo-player PRIVATE
-    -Wall
-    -Wextra
-    -Wpedantic
-    -Wno-deprecated-declarations
-    -Wno-psabi
-    $<$<CONFIG:Release>:-Ofast>
-    $<$<CONFIG:Release>:-fomit-frame-pointer>
-    $<$<CONFIG:Release>:-fno-rtti>
-)
-
-target_link_libraries(miyoo-player PRIVATE
+add_executable(${MIYOO_PLAYER_TARGET} ${MIYOO_PLAYER_SOURCES})
+miyoo_apply_common_options(${MIYOO_PLAYER_TARGET})
+target_link_libraries(${MIYOO_PLAYER_TARGET} PRIVATE
     PkgConfig::AVFORMAT
     PkgConfig::AVCODEC
     PkgConfig::AVUTIL
@@ -71,22 +95,20 @@ target_link_libraries(miyoo-player PRIVATE
     ${SDL_BACKEND_LIBRARIES}
 )
 
-install(TARGETS miyoo-player RUNTIME DESTINATION bin)
+if(NOT MIYOO_NATIVE_TEST)
+    install(TARGETS ${MIYOO_PLAYER_TARGET} RUNTIME DESTINATION bin)
+endif()
 
 if(MIYOO_BUILD_KEYTEST)
-    add_executable(miyoo-keytest tools/keytest/main.cpp)
-    target_include_directories(miyoo-keytest PRIVATE src ${SDL_BACKEND_EXISTING_INCLUDE_DIRS})
-    target_compile_options(miyoo-keytest PRIVATE
-        ${SDL_BACKEND_CFLAGS_OTHER}
-        -Wall
-        -Wextra
-        -Wpedantic
-        -Wno-psabi
-        $<$<CONFIG:Release>:-Ofast>
-        $<$<CONFIG:Release>:-fomit-frame-pointer>
-        $<$<CONFIG:Release>:-fno-rtti>
-    )
-    target_link_directories(miyoo-keytest PRIVATE ${SDL_BACKEND_LIBRARY_DIRS})
-    target_link_libraries(miyoo-keytest PRIVATE ${SDL_BACKEND_LIBRARIES})
-    install(TARGETS miyoo-keytest RUNTIME DESTINATION bin)
+    set(MIYOO_KEYTEST_TARGET miyoo-keytest)
+    if(MIYOO_NATIVE_TEST)
+        set(MIYOO_KEYTEST_TARGET miyoo-keytest-native)
+    endif()
+
+    add_executable(${MIYOO_KEYTEST_TARGET} tools/keytest/main.cpp)
+    miyoo_apply_common_options(${MIYOO_KEYTEST_TARGET})
+    target_link_libraries(${MIYOO_KEYTEST_TARGET} PRIVATE ${SDL_BACKEND_LIBRARIES})
+    if(NOT MIYOO_NATIVE_TEST)
+        install(TARGETS ${MIYOO_KEYTEST_TARGET} RUNTIME DESTINATION bin)
+    endif()
 endif()

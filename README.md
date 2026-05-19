@@ -112,6 +112,37 @@ cmake -S . -B build-miyoo-sdl2 \
 cmake --build build-miyoo-sdl2 -j
 ```
 
+
+### Native Test Build
+
+Use this when you want to run the player on the build machine with the host SDL/FFmpeg libraries and no Miyoo device or cross toolchain. The native test build does not set the SDL 1.2 `fbcon` video driver or the Miyoo mouse-driver environment overrides, and when no media directory is provided it defaults to the current working directory instead of `/mnt/videos`.
+
+With CMake presets:
+
+```sh
+cmake --preset native-test-sdl2
+cmake --build --preset native-test-sdl2
+./build-native-test/miyoo-player-native /path/to/media
+```
+
+Without presets:
+
+```sh
+cmake -S . -B build-native-test \
+  -DCMAKE_BUILD_TYPE=Debug \
+  -DMIYOO_NATIVE_TEST=ON \
+  -DMIYOO_USE_SDL2=ON
+cmake --build build-native-test -j
+./build-native-test/miyoo-player-native /path/to/media
+```
+
+This builds:
+
+- `build-native-test/miyoo-player-native` - native desktop test player.
+- `build-native-test/miyoo-keytest-native` - native SDL keycode tester.
+
+The native preset uses SDL2 by default. For a host SDL 1.2 test, configure with `-DMIYOO_NATIVE_TEST=ON -DMIYOO_USE_SDL2=OFF`. Do not pass `-DCMAKE_TOOLCHAIN_FILE=cmake/miyoo-toolchain.cmake` for native tests. If the host has no usable audio device, the native build retries SDL audio with `SDL_AUDIODRIVER=dummy`; for headless video tests, set an SDL video driver explicitly before launching.
+
 ## Install To Device
 
 Copy the binary to the SD card or device:

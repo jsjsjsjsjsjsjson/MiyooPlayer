@@ -29,7 +29,11 @@ static std::string media_root(int argc, char** argv) {
     if (env && env[0]) {
         return env;
     }
+#ifdef MIYOO_NATIVE_TEST
+    return ".";
+#else
     return "/mnt/videos";
+#endif
 }
 
 static PlaybackOrder next_order(PlaybackOrder order) {

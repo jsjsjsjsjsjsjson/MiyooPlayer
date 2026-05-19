@@ -149,9 +149,7 @@ bool Player::open(const std::string& path) {
     }
 
     if (audio_ctx_) {
-        swr_ = swr_alloc_set_opts(nullptr, AV_CH_LAYOUT_STEREO, AV_SAMPLE_FMT_S16, output_sample_rate_,
-                                  ffmpeg_channel_layout(audio_ctx_), audio_ctx_->sample_fmt,
-                                  audio_ctx_->sample_rate, 0, nullptr);
+        swr_ = ffmpeg_alloc_stereo_resampler(AV_SAMPLE_FMT_S16, output_sample_rate_, audio_ctx_);
         if (!swr_ || swr_init(swr_) < 0) {
             return false;
         }

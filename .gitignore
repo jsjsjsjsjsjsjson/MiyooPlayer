@@ -1,3 +1,5 @@
 build/
 build-miyoo/
 build-miyoo-sdl2/
+build-native-test/
+CMakeUserPresets.json

@@ -131,25 +131,32 @@ static MediaToolResult media_remux_copy(const std::string& input, const std::str
         avformat_close_input(&in);
         return res;
     }
-    AVPacket pkt;
-    av_init_packet(&pkt);
-    while (av_read_frame(in, &pkt) >= 0) {
-        int out_index = pkt.stream_index >= 0 && pkt.stream_index < static_cast<int>(map.size())
-            ? map[pkt.stream_index] : -1;
-        if (out_index >= 0) {
-            AVStream* ist = in->streams[pkt.stream_index];
-            AVStream* ost = out->streams[out_index];
-            pkt.pts = av_rescale_q_rnd(pkt.pts, ist->time_base, ost->time_base,
-                                       static_cast<AVRounding>(AV_ROUND_NEAR_INF | AV_ROUND_PASS_MINMAX));
-            pkt.dts = av_rescale_q_rnd(pkt.dts, ist->time_base, ost->time_base,
-                                       static_cast<AVRounding>(AV_ROUND_NEAR_INF | AV_ROUND_PASS_MINMAX));
-            pkt.duration = av_rescale_q(pkt.duration, ist->time_base, ost->time_base);
-            pkt.pos = -1;
-            pkt.stream_index = out_index;
-            av_interleaved_write_frame(out, &pkt);
-        }
-        av_packet_unref(&pkt);
+    AVPacket* pkt = av_packet_alloc();
+    if (!pkt) {
+        res.error = "packet alloc failed";
+        if (!(out->oformat->flags & AVFMT_NOFILE)) avio_closep(&out->pb);
+        avformat_free_context(out);
+        avformat_close_input(&in);
+        return res;
     }
+    while (av_read_frame(in, pkt) >= 0) {
+        int out_index = pkt->stream_index >= 0 && pkt->stream_index < static_cast<int>(map.size())
+            ? map[pkt->stream_index] : -1;
+        if (out_index >= 0) {
+            AVStream* ist = in->streams[pkt->stream_index];
+            AVStream* ost = out->streams[out_index];
+            pkt->pts = av_rescale_q_rnd(pkt->pts, ist->time_base, ost->time_base,
+                                        static_cast<AVRounding>(AV_ROUND_NEAR_INF | AV_ROUND_PASS_MINMAX));
+            pkt->dts = av_rescale_q_rnd(pkt->dts, ist->time_base, ost->time_base,
+                                        static_cast<AVRounding>(AV_ROUND_NEAR_INF | AV_ROUND_PASS_MINMAX));
+            pkt->duration = av_rescale_q(pkt->duration, ist->time_base, ost->time_base);
+            pkt->pos = -1;
+            pkt->stream_index = out_index;
+            av_interleaved_write_frame(out, pkt);
+        }
+        av_packet_unref(pkt);
+    }
+    av_packet_free(&pkt);
     av_write_trailer(out);
     if (!(out->oformat->flags & AVFMT_NOFILE)) avio_closep(&out->pb);
     avformat_free_context(out);
@@ -210,25 +217,32 @@ MediaToolResult media_remux_to_mkv(const std::string& input, const std::string& 
         return res;
     }
 
-    AVPacket pkt;
-    av_init_packet(&pkt);
-    while (av_read_frame(in, &pkt) >= 0) {
-        int out_index = pkt.stream_index >= 0 && pkt.stream_index < static_cast<int>(map.size())
-            ? map[pkt.stream_index] : -1;
-        if (out_index >= 0) {
-            AVStream* ist = in->streams[pkt.stream_index];
-            AVStream* ost = out->streams[out_index];
-            pkt.pts = av_rescale_q_rnd(pkt.pts, ist->time_base, ost->time_base,
-                                       static_cast<AVRounding>(AV_ROUND_NEAR_INF | AV_ROUND_PASS_MINMAX));
-            pkt.dts = av_rescale_q_rnd(pkt.dts, ist->time_base, ost->time_base,
-                                       static_cast<AVRounding>(AV_ROUND_NEAR_INF | AV_ROUND_PASS_MINMAX));
-            pkt.duration = av_rescale_q(pkt.duration, ist->time_base, ost->time_base);
-            pkt.pos = -1;
-            pkt.stream_index = out_index;
-            av_interleaved_write_frame(out, &pkt);
-        }
-        av_packet_unref(&pkt);
+    AVPacket* pkt = av_packet_alloc();
+    if (!pkt) {
+        res.error = "packet alloc failed";
+        if (!(out->oformat->flags & AVFMT_NOFILE)) avio_closep(&out->pb);
+        avformat_free_context(out);
+        avformat_close_input(&in);
+        return res;
     }
+    while (av_read_frame(in, pkt) >= 0) {
+        int out_index = pkt->stream_index >= 0 && pkt->stream_index < static_cast<int>(map.size())
+            ? map[pkt->stream_index] : -1;
+        if (out_index >= 0) {
+            AVStream* ist = in->streams[pkt->stream_index];
+            AVStream* ost = out->streams[out_index];
+            pkt->pts = av_rescale_q_rnd(pkt->pts, ist->time_base, ost->time_base,
+                                        static_cast<AVRounding>(AV_ROUND_NEAR_INF | AV_ROUND_PASS_MINMAX));
+            pkt->dts = av_rescale_q_rnd(pkt->dts, ist->time_base, ost->time_base,
+                                        static_cast<AVRounding>(AV_ROUND_NEAR_INF | AV_ROUND_PASS_MINMAX));
+            pkt->duration = av_rescale_q(pkt->duration, ist->time_base, ost->time_base);
+            pkt->pos = -1;
+            pkt->stream_index = out_index;
+            av_interleaved_write_frame(out, pkt);
+        }
+        av_packet_unref(pkt);
+    }
+    av_packet_free(&pkt);
     av_write_trailer(out);
     if (!(out->oformat->flags & AVFMT_NOFILE)) avio_closep(&out->pb);
     avformat_free_context(out);
@@ -329,9 +343,7 @@ static MediaToolResult media_extract_audio_wav_opts(const std::string& input, co
             goto done;
         }
         AVSampleFormat out_fmt = options.bit_depth == 16 ? AV_SAMPLE_FMT_S16 : AV_SAMPLE_FMT_S32;
-        swr = swr_alloc_set_opts(nullptr, AV_CH_LAYOUT_STEREO, out_fmt, options.sample_rate,
-                                 ffmpeg_channel_layout(dec_ctx), dec_ctx->sample_fmt,
-                                 dec_ctx->sample_rate, 0, nullptr);
+        swr = ffmpeg_alloc_stereo_resampler(out_fmt, options.sample_rate, dec_ctx);
         if (!swr || swr_init(swr) < 0) {
             res.error = "resampler failed";
             goto done;
@@ -408,20 +420,23 @@ static bool encode_audio_frame(AVCodecContext* enc_ctx, AVFormatContext* out_fmt
         res.error = "encode send failed";
         return false;
     }
-    AVPacket pkt;
-    av_init_packet(&pkt);
-    pkt.data = nullptr;
-    pkt.size = 0;
-    while ((ret = avcodec_receive_packet(enc_ctx, &pkt)) == 0) {
-        av_packet_rescale_ts(&pkt, enc_ctx->time_base, out_stream->time_base);
-        pkt.stream_index = out_stream->index;
-        if (av_interleaved_write_frame(out_fmt, &pkt) < 0) {
-            av_packet_unref(&pkt);
+    AVPacket* pkt = av_packet_alloc();
+    if (!pkt) {
+        res.error = "packet alloc failed";
+        return false;
+    }
+    while ((ret = avcodec_receive_packet(enc_ctx, pkt)) == 0) {
+        av_packet_rescale_ts(pkt, enc_ctx->time_base, out_stream->time_base);
+        pkt->stream_index = out_stream->index;
+        if (av_interleaved_write_frame(out_fmt, pkt) < 0) {
+            av_packet_unref(pkt);
+            av_packet_free(&pkt);
             res.error = "write packet failed";
             return false;
         }
-        av_packet_unref(&pkt);
+        av_packet_unref(pkt);
     }
+    av_packet_free(&pkt);
     return ret == AVERROR(EAGAIN) || ret == AVERROR_EOF;
 }
 
@@ -474,8 +489,7 @@ static MediaToolResult media_encode_audio(const std::string& input, const std::s
             goto done;
         }
         enc_ctx->sample_rate = options.sample_rate;
-        enc_ctx->channel_layout = AV_CH_LAYOUT_STEREO;
-        enc_ctx->channels = 2;
+        ffmpeg_set_stereo_layout(enc_ctx);
         enc_ctx->sample_fmt = choose_sample_fmt(enc);
         enc_ctx->bit_rate = options.bitrate_kbps * 1000;
         enc_ctx->time_base = AVRational{1, options.sample_rate};
@@ -495,9 +509,7 @@ static MediaToolResult media_encode_audio(const std::string& input, const std::s
             goto done;
         }
         out_stream->time_base = enc_ctx->time_base;
-        swr = swr_alloc_set_opts(nullptr, enc_ctx->channel_layout, enc_ctx->sample_fmt, enc_ctx->sample_rate,
-                                 ffmpeg_channel_layout(dec_ctx), dec_ctx->sample_fmt,
-                                 dec_ctx->sample_rate, 0, nullptr);
+        swr = ffmpeg_alloc_stereo_resampler(enc_ctx->sample_fmt, enc_ctx->sample_rate, dec_ctx);
         if (!swr || swr_init(swr) < 0) {
             res.error = "resampler failed";
             goto done;
@@ -519,7 +531,11 @@ static MediaToolResult media_encode_audio(const std::string& input, const std::s
                 int out_samples = av_rescale_rnd(swr_get_delay(swr, dec_ctx->sample_rate) + decoded->nb_samples,
                                                  enc_ctx->sample_rate, dec_ctx->sample_rate, AV_ROUND_UP);
                 converted->nb_samples = out_samples;
-                converted->channel_layout = enc_ctx->channel_layout;
+                if (ffmpeg_copy_channel_layout_to_frame(converted, enc_ctx) < 0) {
+                    res.error = "frame layout failed";
+                    av_frame_unref(decoded);
+                    goto done;
+                }
                 converted->format = enc_ctx->sample_fmt;
                 converted->sample_rate = enc_ctx->sample_rate;
                 if (av_frame_get_buffer(converted, 0) < 0) {
@@ -548,7 +564,11 @@ static MediaToolResult media_encode_audio(const std::string& input, const std::s
         int out_samples = av_rescale_rnd(swr_get_delay(swr, dec_ctx->sample_rate) + decoded->nb_samples,
                                          enc_ctx->sample_rate, dec_ctx->sample_rate, AV_ROUND_UP);
         converted->nb_samples = out_samples;
-        converted->channel_layout = enc_ctx->channel_layout;
+        if (ffmpeg_copy_channel_layout_to_frame(converted, enc_ctx) < 0) {
+            res.error = "frame layout failed";
+            av_frame_unref(decoded);
+            goto done;
+        }
         converted->format = enc_ctx->sample_fmt;
         converted->sample_rate = enc_ctx->sample_rate;
         if (av_frame_get_buffer(converted, 0) < 0) {

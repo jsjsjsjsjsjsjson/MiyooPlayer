@@ -1,0 +1,5 @@
+title=Miyoo KeyTest
+description=Show SDL keycodes for Miyoo buttons
+exec=/mnt/App/MiyooPlayer/miyoo-keytest
+selector=false
+clock=720

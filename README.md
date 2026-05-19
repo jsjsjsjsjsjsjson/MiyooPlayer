@@ -117,9 +117,9 @@ cmake --build build-miyoo-sdl2 -j
 Copy the binary to the SD card or device:
 
 ```sh
-mkdir -p /media/$USER/MIYOO/App/MiyooPlayer
-cp build-miyoo/miyoo-player /media/$USER/MIYOO/App/MiyooPlayer/
-cp build-miyoo/miyoo-keytest /media/$USER/MIYOO/App/MiyooPlayer/
+mkdir -p /mnt/apps/MiyooPlayer
+cp build-miyoo/miyoo-player /mnt/apps/MiyooPlayer/
+cp build-miyoo/miyoo-keytest /mnt/apps/MiyooPlayer/
 ```
 
 Put media under `/mnt/videos`, or pass a directory in the launcher command.
@@ -132,7 +132,7 @@ Example gmenu2x launcher: `gmenu2x/miyoo-player.lnk`
 ```ini
 title=Miyoo Player
 description=Local video and audio player
-exec=/mnt/App/MiyooPlayer/miyoo-player
+exec=/mnt/apps/MiyooPlayer/miyoo-player
 params=/mnt/videos
 selector=false
 clock=720
@@ -145,7 +145,7 @@ Adjust paths for your SD card layout.
 Run this on the device to discover SDL key mappings:
 
 ```sh
-/mnt/App/MiyooPlayer/miyoo-keytest
+/mnt/apps/MiyooPlayer/miyoo-keytest
 ```
 
 Press each physical button and write down the `KEY` number and `NAME` shown on screen. The same lines are also printed to stderr if you launch it from a shell. Exit with RESET, or `Q` if you run it from a keyboard.

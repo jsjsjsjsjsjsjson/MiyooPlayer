@@ -38,11 +38,12 @@ The exact Miyoo button mapping depends on the SDL keymap in the firmware. The pl
 | Page in browser | L2/R2 |
 | Open/play | A, START, Y, D-pad Right |
 | Back/stop | B, R1 |
-| Menu | SELECT, L1 |
+| Menu | SELECT, L1 outside playback |
 | Pause/resume during playback | START, A, Y |
 | Mark file in browser | X |
 | Cycle playback order during playback | X |
-| Seek -10s/+10s | D-pad Left/Right, L2/R2 |
+| Volume -/+ during playback | L1/R1 |
+| Seek -10s/+10s during playback | D-pad Left/Right, L2/R2 |
 | Previous/next track during playback | D-pad Up/Down |
 | Quit | RESET |
 

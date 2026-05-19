@@ -68,6 +68,8 @@ function(miyoo_apply_common_options target_name)
         -Wpedantic
         -Wno-deprecated-declarations
         -Wno-psabi
+        $<$<CONFIG:Release>:-mcpu=arm926ej-s>
+        $<$<CONFIG:Release>:-marm>
         $<$<CONFIG:Release>:-Ofast>
         $<$<CONFIG:Release>:-fomit-frame-pointer>
         $<$<CONFIG:Release>:-fno-rtti>

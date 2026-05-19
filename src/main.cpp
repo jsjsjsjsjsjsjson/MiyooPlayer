@@ -270,7 +270,9 @@ int main(int argc, char** argv) {
                     running = false;
                     break;
                 case Action::Back:
+                case Action::R1:
                 case Action::Menu:
+                case Action::L1:
                     home.menu_open = false;
                     home.pending_delete = false;
                     last_draw = 0;
@@ -333,10 +335,12 @@ int main(int argc, char** argv) {
                     running = false;
                     break;
                 case Action::Menu:
+                case Action::L1:
                     home.menu_open = true;
                     last_draw = 0;
                     break;
                 case Action::Back:
+                case Action::R1:
                     screen = AppScreen::Browser;
                     last_draw = 0;
                     break;
@@ -356,6 +360,7 @@ int main(int argc, char** argv) {
                     last_draw = 0;
                     break;
                 case Action::SeekBack:
+                case Action::L2:
                     screen = AppScreen::Browser;
                     last_draw = 0;
                     break;
@@ -392,7 +397,9 @@ int main(int argc, char** argv) {
                     running = false;
                     break;
                 case Action::Back:
+                case Action::R1:
                 case Action::Menu:
+                case Action::L1:
                     playlist_view.menu_open = false;
                     last_draw = 0;
                     break;
@@ -454,11 +461,13 @@ int main(int argc, char** argv) {
                     running = false;
                     break;
                 case Action::Back:
+                case Action::R1:
                 case Action::Left:
                     screen = AppScreen::Home;
                     last_draw = 0;
                     break;
                 case Action::Menu:
+                case Action::L1:
                     playlist_view.menu_open = true;
                     playlist_view.menu_selected = 0;
                     playlist_view.pending_delete = false;
@@ -479,6 +488,7 @@ int main(int argc, char** argv) {
                     last_draw = 0;
                     break;
                 case Action::SeekBack:
+                case Action::L2:
                     playlist_view.selected = clamp_int(playlist_view.selected - 8, 0, p->items.empty() ? 0 : static_cast<int>(p->items.size()) - 1);
                     fix_playlist_view(playlist_view, playlists);
                     last_draw = 0;
@@ -518,7 +528,9 @@ int main(int argc, char** argv) {
                 running = false;
                 break;
             case Action::Back:
+            case Action::R1:
             case Action::Menu:
+            case Action::L1:
                 screen = AppScreen::Browser;
                 last_draw = 0;
                 break;
@@ -569,7 +581,9 @@ int main(int argc, char** argv) {
                 running = false;
                 break;
             case Action::Back:
+            case Action::R1:
             case Action::Menu:
+            case Action::L1:
                 settings_state.values = settings;
                 ui_set_theme(settings.theme);
                 screen = AppScreen::Home;
@@ -639,7 +653,9 @@ int main(int argc, char** argv) {
                     running = false;
                     break;
                 case Action::Back:
+                case Action::R1:
                 case Action::Menu:
+                case Action::L1:
                     browser_menu.open = false;
                     last_draw = 0;
                     break;
@@ -729,6 +745,7 @@ int main(int argc, char** argv) {
                     running = false;
                     break;
                 case Action::Menu:
+                case Action::L1:
                     browser_menu.open = true;
                     last_draw = 0;
                     break;
@@ -750,6 +767,7 @@ int main(int argc, char** argv) {
                     last_draw = 0;
                     break;
                 case Action::SeekBack:
+                case Action::L2:
                     browser.page_up();
                     last_draw = 0;
                     break;
@@ -759,6 +777,7 @@ int main(int argc, char** argv) {
                     break;
                 case Action::Left:
                 case Action::Back:
+                case Action::R1:
                     if (browser.cwd() == root) {
                         screen = AppScreen::Home;
                     } else {

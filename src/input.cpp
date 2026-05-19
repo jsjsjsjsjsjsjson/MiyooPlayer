@@ -30,13 +30,15 @@ Action poll_action() {
         case SDLK_SPACE: return Action::Confirm;
 
         case SDLK_LCTRL:
-        case SDLK_BACKSPACE:
             return Action::Back;
+        case SDLK_BACKSPACE:
+            return Action::R1;
 
         case SDLK_ESCAPE:
-        case SDLK_TAB:
         case SDLK_m:
             return Action::Menu;
+        case SDLK_TAB:
+            return Action::L1;
 
         case SDLK_RCTRL:
         case SDLK_q:
@@ -46,9 +48,10 @@ Action poll_action() {
             return Action::CycleOrder;
         case SDLK_p: return Action::Pause;
 
-        case SDLK_PAGEUP:
         case SDLK_a:
             return Action::SeekBack;
+        case SDLK_PAGEUP:
+            return Action::L2;
         case SDLK_PAGEDOWN:
         case SDLK_d:
             return Action::SeekForward;

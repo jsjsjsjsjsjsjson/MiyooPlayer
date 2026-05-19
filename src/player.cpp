@@ -359,6 +359,14 @@ void Player::handle(Action action) {
         menu_open_ = !menu_open_;
         show_osd(menu_open_ ? 60000 : osd_ms_);
         break;
+    case Action::L1:
+        audio_.set_volume(audio_.volume() - 8);
+        show_osd(osd_ms_);
+        break;
+    case Action::R1:
+        audio_.set_volume(audio_.volume() + 8);
+        show_osd(osd_ms_);
+        break;
     case Action::CycleOrder:
         cycle_order();
         show_osd(osd_ms_);
@@ -381,6 +389,7 @@ void Player::handle(Action action) {
         break;
     case Action::SeekBack:
     case Action::Left:
+    case Action::L2:
         seek_relative(-static_cast<float>(seek_step_sec_));
         show_osd(osd_ms_);
         break;

@@ -17,6 +17,9 @@ enum class Action {
     VolDown,
     VolUp,
     Menu,
+    L1,
+    L2,
+    R1,
     CycleOrder,
     Quit
 };
